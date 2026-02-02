@@ -20,7 +20,7 @@ A high-performance, native C++ rewrite of the TornadoV mod for Grand Theft Auto 
 ## 🚀 Installation
 
 1. Ensure you have [ScriptHookV](http://www.dev-c.com/gtav/scripthookv/) installed.
-2. Place `TornadoV.asi` and `TornadoV.ini` into your GTA V main directory.
+2. Place `TornadoV.asi` into your GTA V main directory.
 3. (Optional) Customize settings in the `TornadoV.ini` file.
 
 ## 🎮 Controls
