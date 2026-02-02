@@ -16,7 +16,6 @@ A high-performance, native C++ rewrite of the TornadoV mod for Grand Theft Auto 
 - **Frame-Sync Logic**: Uses `GAMEPLAY::GET_FRAME_TIME()` and `GAMEPLAY::GET_GAME_TIMER()` to ensure consistent simulation regardless of frame rate.
 - **Memory Management**: Utilizes modern C++ smart pointers and RAII principles to prevent memory leaks and script crashes.
 - **Optimized Math**: Custom `MathEx` class for high-performance Vector3 and Quaternion operations, ensuring 1:1 parity with the original's movement logic while running at native speeds.
-- **SDK Compliance**: 100% compliant with ScriptHookV SDK 1.0.617.1a+, using direct native calls for maximum compatibility.
 
 ## 🚀 Installation
 
