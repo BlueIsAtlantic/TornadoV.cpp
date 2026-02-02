@@ -6,7 +6,6 @@ A high-performance, native C++ rewrite of the TornadoV mod for Grand Theft Auto 
 
 - **Native Performance**: Built from the ground up in C++ to minimize frame time impact and maximize execution efficiency.
 - **Enhanced Physics Engine**: Completely rewritten force application logic (`ENTITY::APPLY_FORCE_TO_ENTITY`) for more realistic entity pulling, rotation, and lofting.
-- **Optimized PTFX System**: Improved Particle FX management with handle validation and smart cleanup, resolving the "invisible funnel" issues common in script-based versions.
 - **Intelligent Spawning**: Dynamic spawning system that reacts to weather conditions (storms) with configurable delays and distance checks.
 - **Seamless UI**: Built-in menu system for real-time configuration of vortex strength, movement, and visual styles.
 - **F6 Toggle**: Quick spawn/despawn functionality for immediate action.
