@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="TornadoV/TornadoV.vcxproj" Id="430eed55-2d10-44aa-b459-e789a6d5d2de" />
+</Solution>

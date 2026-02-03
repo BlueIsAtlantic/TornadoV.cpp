@@ -1,0 +1,3 @@
+#include "inc/resource.h"
+
+IDR_INI_DEFAULT RCDATA "Resources\\TornadoV.ini"

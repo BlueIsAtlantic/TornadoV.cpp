@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>18.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{430eed55-2d10-44aa-b459-e789a6d5d2de}</ProjectGuid>
+    <RootNamespace>TornadoV</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(ProjectDir)inc;C:\Users\danie\Desktop\TornadoV\TornadoVSHV\Necessities\ScriptHookV_SDK_1.0.617.1a\inc;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\danie\Desktop\TornadoV\TornadoVSHV\Necessities\ScriptHookV_SDK_1.0.617.1a\lib;$(LibraryPath)</LibraryPath>
+    <TargetExt>.asi</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(ProjectDir)inc;C:\Users\danie\Desktop\TornadoV\TornadoVSHV\Necessities\ScriptHookV_SDK_1.0.617.1a\inc;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\danie\Desktop\TornadoV\TornadoVSHV\Necessities\ScriptHookV_SDK_1.0.617.1a\lib;$(LibraryPath)</LibraryPath>
+    <TargetExt>.asi</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <DisableSpecificWarnings>4505;4127;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>_DEBUG;TORNADOV_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>ScriptHookV.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <DisableSpecificWarnings>4505;4127;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>NDEBUG;TORNADOV_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>ScriptHookV.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="inc\IniHelper.h" />
+    <ClInclude Include="inc\keyboard.h" />
+    <ClInclude Include="inc\Logger.h" />
+    <ClInclude Include="inc\LoopedParticle.h" />
+    <ClInclude Include="inc\main.h" />
+    <ClInclude Include="inc\MathEx.h" />
+    <ClInclude Include="inc\script.h" />
+    <ClInclude Include="inc\TornadoFactory.h" />
+    <ClInclude Include="inc\TornadoMenu.h" />
+    <ClInclude Include="inc\TornadoParticle.h" />
+    <ClInclude Include="inc\TornadoVortex.h" />
+    <ClInclude Include="inc\resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TornadoV.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\core\main.cpp" />
+    <ClCompile Include="src\core\script.cpp" />
+    <ClCompile Include="src\physics\TornadoFactory.cpp" />
+    <ClCompile Include="src\physics\TornadoParticle.cpp" />
+    <ClCompile Include="src\physics\TornadoVortex.cpp" />
+    <ClCompile Include="src\ui\TornadoMenu.cpp" />
+    <ClCompile Include="src\utils\IniHelper.cpp" />
+    <ClCompile Include="src\utils\keyboard.cpp" />
+    <ClCompile Include="src\utils\Logger.cpp" />
+    <ClCompile Include="src\utils\LoopedParticle.cpp" />
+    <ClCompile Include="src\utils\MathEx.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TornadoV.ini" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

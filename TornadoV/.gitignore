@@ -1,0 +1,34 @@
+# Visual Studio artifacts
+.vs/
+*.user
+*.suo
+*.sln.doccache
+*.vsp
+*.vspx
+*.sap
+*.log
+*.tlog
+*.lastbuildstate
+
+# Build output
+x64/
+Release/
+Debug/
+bin/
+obj/
+TornadoV/x64/
+TornadoV/Release/
+TornadoV/Debug/
+
+# Executables and libraries
+*.asi
+*.pdb
+*.lib
+*.exp
+*.iobj
+*.ipdb
+
+# Temporary files
+*.tmp
+*.bak
+*.old
