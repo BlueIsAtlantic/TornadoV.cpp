@@ -29,6 +29,8 @@ bool TornadoMenu::m_useInternalPool = true;
 bool TornadoMenu::m_notifications = true;
 bool TornadoMenu::m_spawnInStorm = true;
 float TornadoMenu::m_moveSpeedScale = 1.0f;
+float TornadoMenu::m_maxEntityDistance = 57.0f;
+int TornadoMenu::m_maxEntityCount = 200;
 DWORD TornadoMenu::m_toggleKey = VK_F5;
 
 float TornadoMenu::m_menuX = 0.15f;
@@ -56,6 +58,8 @@ void TornadoMenu::Initialize() {
     m_notifications = IniHelper::GetValue("Other", "Notifications", true);
     m_spawnInStorm = IniHelper::GetValue("Other", "SpawnInStorm", true);
     m_moveSpeedScale = IniHelper::GetValue("Vortex", "MoveSpeedScale", 1.0f);
+    m_maxEntityDistance = IniHelper::GetValue("Vortex", "MaxEntityDistance", 57.0f);
+    m_maxEntityCount = IniHelper::GetValue("Vortex", "MaxEntityCount", 200);
     
     // UI Settings
     m_menuX = IniHelper::GetValue("Menu", "X", 0.15f);
@@ -124,6 +128,12 @@ void TornadoMenu::SetupMenus() {
     }));
     settings.items.push_back(MenuItem("Spawn In Storm", &m_spawnInStorm, []() {
         IniHelper::WriteValue("Other", "SpawnInStorm", m_spawnInStorm ? "true" : "false");
+    }));
+    settings.items.push_back(MenuItem("Max Entity Distance", &m_maxEntityDistance, 10.0f, 500.0f, 5.0f, []() {
+        IniHelper::WriteValue("Vortex", "MaxEntityDistance", std::to_string(m_maxEntityDistance));
+    }));
+    settings.items.push_back(MenuItem("Max Entity Count", &m_maxEntityCount, 10, 1000, 10, []() {
+        IniHelper::WriteValue("Vortex", "MaxEntityCount", std::to_string(m_maxEntityCount));
     }));
     m_submenus.push_back(settings);
 

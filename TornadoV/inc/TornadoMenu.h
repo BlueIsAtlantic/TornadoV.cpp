@@ -67,6 +67,8 @@ public:
     static bool m_notifications;
     static bool m_spawnInStorm;
     static float m_moveSpeedScale;
+    static float m_maxEntityDistance;
+    static int m_maxEntityCount;
     static DWORD m_toggleKey;
 
     // UI Settings

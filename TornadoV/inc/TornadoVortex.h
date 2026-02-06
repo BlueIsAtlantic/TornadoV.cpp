@@ -70,7 +70,7 @@ private:
 
     int _updateFrameCounter;
     static const int PARTICLE_UPDATE_INTERVAL = 2;
-    static const int MaxEntityCount = 200;
+    int MaxEntityCount = 200;
 
     // Helper for blip (not in C# but needed for SHV)
     Blip m_blip;

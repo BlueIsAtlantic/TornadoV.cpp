@@ -21,8 +21,6 @@ TornadoVortex::TornadoVortex(Vector3 initialPosition, bool neverDespawn)
     std::uniform_int_distribution<> dis(160000, 600000);
     _lifeSpan = neverDespawn ? -1 : dis(gen); 
     
-    MaxEntityDist = IniHelper::GetValue("Vortex", "MaxEntityDistance", 57.0f);
-
     RefreshCachedVars();
 }
 
@@ -34,6 +32,11 @@ void TornadoVortex::RefreshCachedVars() {
     _cachedVerticalForce = IniHelper::GetValue("Vortex", "VerticalForceScale", 2.29f);
     _cachedHorizontalForce = IniHelper::GetValue("Vortex", "HorizontalForceScale", 1.7f);
     _cachedTopSpeed = IniHelper::GetValue("Vortex", "MaxEntitySpeed", 40.0f);
+    
+    // Use the values from TornadoMenu which are synchronized with the menu UI
+    MaxEntityDist = TornadoMenu::m_maxEntityDistance;
+    MaxEntityCount = TornadoMenu::m_maxEntityCount;
+    
     _lastVarCacheTime = GAMEPLAY::GET_GAME_TIMER();
 }
 
@@ -201,7 +204,8 @@ void TornadoVortex::CollectNearbyEntities(int gameTime, float maxDistanceDelta) 
     if (gameTime < _nextUpdateTime) return;
     
     if (_pulledEntities.size() >= MaxEntityCount) {
-        _nextUpdateTime = gameTime + 1500;
+        // Still scan occasionally to replace invalid entities, but slower
+        _nextUpdateTime = gameTime + 2000;
         return;
     }
 
@@ -212,9 +216,12 @@ void TornadoVortex::CollectNearbyEntities(int gameTime, float maxDistanceDelta) 
     std::uniform_real_distribution<float> scalarDis(-1.0f, 1.0f);
 
     int addedTotal = 0;
-    const int MAX_ADD_PER_TICK = 50; 
+    // Increase limit significantly to ensure we don't "skip" entities in large radii
+    // Processing 1024 entities' distance is fast enough for modern CPUs
+    const int MAX_ADD_PER_TICK = 300; 
     
-    float searchRadius = maxDistanceDelta + 10.0f; 
+    // Internal vortex radius for priority collection
+    float coreRadius = IniHelper::GetValue("Vortex", "VortexRadius", 9.4f);
 
     // Helper to process entities from a pool
     auto processPool = [&](int count) {
@@ -223,13 +230,21 @@ void TornadoVortex::CollectNearbyEntities(int gameTime, float maxDistanceDelta) 
             if (!ENTITY::DOES_ENTITY_EXIST(ent)) continue;
             if (_pulledEntities.count(ent)) continue;
             if (addedTotal >= MAX_ADD_PER_TICK) break;
+            if (_pulledEntities.size() >= MaxEntityCount) break;
 
             Vector3 pos = ENTITY::GET_ENTITY_COORDS(ent, true);
             float dist2d = MathEx::Distance2D(pos, _position);
             
-            // Match C# filter: maxDistanceDelta + 4.0f
-            if (dist2d > maxDistanceDelta + 4.0f) continue;
+            // THOROUGH SCAN: 
+            // 1. Entities entering the outer radius
+            // 2. Entities already inside the radius (anywhere)
+            if (dist2d > maxDistanceDelta + 5.0f) continue;
+            
+            // Don't pull entities that are too high up already
             if (ENTITY::GET_ENTITY_HEIGHT_ABOVE_GROUND(ent) > 300.0f) continue;
+
+            // Priority: if it's very close to the core, always try to add it
+            bool isPriority = (dist2d < coreRadius * 2.0f);
 
             if (ENTITY::IS_ENTITY_A_PED(ent)) {
                 if (!PED::IS_PED_RAGDOLL(ent)) {
@@ -242,18 +257,24 @@ void TornadoVortex::CollectNearbyEntities(int gameTime, float maxDistanceDelta) 
         }
     };
 
-    // Process each pool separately to avoid short-circuiting
+    // Process all pools. 
+    // We don't stop after Peds if we still have room, ensuring inner vehicles/objects are also caught.
     processPool(worldGetAllPeds(entities, POOL_SIZE));
     
-    if (addedTotal < MAX_ADD_PER_TICK) {
+    if (_pulledEntities.size() < MaxEntityCount && addedTotal < MAX_ADD_PER_TICK) {
         processPool(worldGetAllVehicles(entities, POOL_SIZE));
     }
 
-    if (addedTotal < MAX_ADD_PER_TICK) {
+    if (_pulledEntities.size() < MaxEntityCount && addedTotal < MAX_ADD_PER_TICK) {
         processPool(worldGetAllObjects(entities, POOL_SIZE));
     }
 
-    _nextUpdateTime = gameTime + 1500;
+    // Dynamic update rate: C++ can handle much faster scanning than C#
+    // 50ms (20 times per second) provides a near-instant response
+    int nextUpdateDelay = 50; 
+    if (_pulledEntities.size() >= MaxEntityCount) nextUpdateDelay = 1000;
+
+    _nextUpdateTime = gameTime + nextUpdateDelay;
 }
 
 void TornadoVortex::UpdatePulledEntities(int gameTime, float maxDistanceDelta) {
@@ -269,20 +290,18 @@ void TornadoVortex::UpdatePulledEntities(int gameTime, float maxDistanceDelta) {
     }
 
     int processedCount = 0;
-    const int MAX_ENTITIES_PER_FRAME = 100; // OPTIMIZATION: Limit entities processed per frame
+    const int MAX_ENTITIES_PER_FRAME = 500; // Increased for C++ performance, ensures we process all entities in most cases
 
     static std::mt19937 gen(std::random_device{}());
     std::uniform_real_distribution<float> floatDis(0.0f, 1.0f);
     std::uniform_real_distribution<float> scalarDis(-1.0f, 1.0f);
 
     for (auto const& kvp : _entitySnapshot) {
-        if (processedCount >= MAX_ENTITIES_PER_FRAME) break;
-        processedCount++;
-
         int key = kvp.first;
         ActiveEntity value = kvp.second;
         Entity entity = value.entity;
 
+        // CLEANUP: Always check existence and range for EVERY entity in the snapshot
         if (!ENTITY::DOES_ENTITY_EXIST(entity)) {
             ReleaseEntity(key);
             continue;
@@ -296,6 +315,12 @@ void TornadoVortex::UpdatePulledEntities(int gameTime, float maxDistanceDelta) {
             ReleaseEntity(key);
             continue;
         }
+
+        // OPTIMIZATION: Limit expensive physics calculations per frame if we have many entities
+        // However, we MUST NOT break the loop here, because we still need to check the remaining
+        // entities for the existence/range cleanup above.
+        if (processedCount >= MAX_ENTITIES_PER_FRAME) continue;
+        processedCount++;
 
         // Fix narrowing conversion warnings by using explicit float initializers
         Vector3 targetPos = { _position.x + value.xBias, 0, _position.y + value.yBias, 0, pos.z, 0 };
