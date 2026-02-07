@@ -2,12 +2,18 @@
 #include "TornadoFactory.h"
 #include "TornadoMenu.h"
 #include "IniHelper.h"
+#include "XmlHelper.h"
 #include "MathEx.h"
 #include "keyboard.h"
 #include "Logger.h"
+#include "AudioManager.h"
+#include "resource.h"
 #include <string>
 #include <memory>
 #include <filesystem>
+#include <fstream>
+
+namespace fs = std::filesystem;
 
 std::unique_ptr<TornadoFactory> g_Factory = nullptr;
 static HMODULE g_hModule = NULL;
@@ -16,78 +22,111 @@ void SetModuleHandle(HMODULE hModule) {
     g_hModule = hModule;
 }
 
+void ExtractResource(int resId, const fs::path& targetPath) {
+    if (fs::exists(targetPath)) return;
+
+    HRSRC hRes = FindResourceA(g_hModule, MAKEINTRESOURCEA(resId), (LPCSTR)RT_RCDATA);
+    if (hRes) {
+        HGLOBAL hData = LoadResource(g_hModule, hRes);
+        if (hData) {
+            DWORD size = SizeofResource(g_hModule, hRes);
+            void* ptr = LockResource(hData);
+            
+            fs::create_directories(targetPath.parent_path());
+            std::ofstream outFile(targetPath, std::ios::binary);
+            if (outFile.is_open()) {
+                outFile.write((const char*)ptr, size);
+                outFile.close();
+            }
+        }
+    }
+}
+
+void Bootstrap() {
+    char path[MAX_PATH];
+    GetModuleFileNameA(g_hModule, path, MAX_PATH);
+    fs::path dllPath(path);
+    fs::path root = dllPath.parent_path() / "TornadoVStuff";
+    fs::path sounds = root / "TornadoVSounds";
+
+    fs::create_directories(sounds);
+
+    // Extract default files if they don't exist
+    ExtractResource(IDR_INI_DEFAULT, root / "TornadoV.ini");
+    ExtractResource(IDR_XML_DEFAULT, root / "menu_config.xml");
+    ExtractResource(IDR_WAV_RUMBLE,  sounds / "rumble-bass-2.wav");
+    ExtractResource(IDR_WAV_EAS,     sounds / "eas_alert.wav");
+    ExtractResource(IDR_WAV_SIREN,   sounds / "tornado-weather-alert.wav");
+}
+
 void update() {
-    static int lastUpdateLog = 0;
     int gameTime = GAMEPLAY::GET_GAME_TIMER();
     
-    // Log EVERY update for debugging, but throttle slightly to not spam too much
-    static int frameCounter = 0;
-    frameCounter++;
-    if (frameCounter % 100 == 0) {
-        Logger::Log("Update tick " + std::to_string(frameCounter) + " (GameTime: " + std::to_string(gameTime) + ")");
-    }
-
-    if (gameTime - lastUpdateLog > 5000) {
-        Logger::Log("Update loop heartbeat... (GameTime: " + std::to_string(gameTime) + ")");
-        lastUpdateLog = gameTime;
-    }
-
     if (g_Factory) {
-        // Logger::Log("Calling Factory::OnUpdate");
         g_Factory->OnUpdate(gameTime);
     }
     
+    // Update Audio Listener
+    Vector3 camPos = CAM::GET_GAMEPLAY_CAM_COORD();
+    Vector3 camRot = CAM::GET_GAMEPLAY_CAM_ROT(2);
+    Vector3 forward = MathEx::RotationToDirection(camRot);
+    AudioManager::Get().UpdateListener(camPos.x, camPos.y, camPos.z, forward.x, forward.y, forward.z, 0, 0, 1);
+
     // Logger::Log("Calling Menu::OnTick");
     TornadoMenu::OnTick();
 }
 
 void ModMain() {
-    try {
-        Logger::Log("ModMain starting...");
-        Logger::Log("ModMain: Initializing IniHelper...");
-        IniHelper::Initialize(g_hModule);
-        
-        // Initialize Logger
-        std::filesystem::path logPath = std::filesystem::path(IniHelper::GetIniPath()).parent_path() / "TornadoV.log";
-        Logger::Initialize(logPath.string());
-        Logger::Log("ModMain: Logger initialized at " + logPath.string());
+    // Initialize Logger as early as possible in TornadoVStuff folder
+    char path[MAX_PATH];
+    GetModuleFileNameA(g_hModule, path, MAX_PATH);
+    fs::path dllPath(path);
+    fs::path logPath = dllPath.parent_path() / "TornadoVStuff" / "TornadoV.log";
+    Logger::Initialize(logPath.string());
 
-        Logger::Log("ModMain: Initializing MathEx...");
+    try {
+        // Run bootstrapping first
+        Bootstrap();
+        
+        IniHelper::Initialize(g_hModule);
+        XmlHelper::Initialize(g_hModule);
+        
         MathEx::Initialize();
         
-        Logger::Log("ModMain: Initializing TornadoMenu...");
+        AudioManager::Get().Init();
+
+        // Load sounds from TornadoVStuff\TornadoVSounds
+        fs::path soundsFolder = dllPath.parent_path() / "TornadoVStuff" / "TornadoVSounds";
+        std::string folder = soundsFolder.string();
+        
+        AudioManager::Get().LoadSound("tornado_loop", folder + "\\rumble-bass-2.wav");
+        AudioManager::Get().LoadSound("eas_beeps", folder + "\\eas_alert.wav");
+        AudioManager::Get().LoadSound("city_siren", folder + "\\tornado-weather-alert.wav");
+
         TornadoMenu::Initialize();
         
-        Logger::Log("ModMain: Creating TornadoFactory...");
         g_Factory = std::make_unique<TornadoFactory>();
         
-        Logger::Log("ModMain: Initialization complete.");
+        Logger::Log("Tornado V Enhanced initialized successfully.");
         
-        Logger::Log("ModMain: Showing notification...");
         IniHelper::ShowNotification("~g~Tornado V Enhanced Loaded! Press F5 for Menu.");
 
-        Logger::Log("ModMain: Entering main loop...");
         while (true) {
             try {
                 // Handle menu toggle key
                 if (IsKeyJustUp(TornadoMenu::m_toggleKey)) {
-                    Logger::Log("ModMain: Toggle key pressed");
                     TornadoMenu::OnKeyDown(TornadoMenu::m_toggleKey);
                 }
 
-                // Handle Tornado toggle key (F6)
-                if (IsKeyJustUp(VK_F6)) {
-                    Logger::Log("ModMain: F6 pressed");
+                // Handle Tornado toggle key
+                if (IsKeyJustUp(TornadoMenu::m_tornadoHotkey)) {
                     if (g_Factory && g_Factory->GetActiveVortexCount() > 0) {
-                        Logger::Log("ModMain: Despawning Tornado...");
                         TornadoMenu::DespawnTornado();
                     } else {
-                        Logger::Log("ModMain: Spawning Tornado...");
                         TornadoMenu::SpawnTornado();
                     }
                 }
 
-                // Logger::Log("ModMain: Calling update()...");
                 update();
             } catch (const std::exception& e) {
                 std::string msg = "TornadoV Script Error: ";

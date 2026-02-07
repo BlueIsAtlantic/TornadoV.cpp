@@ -44,13 +44,13 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir)inc;C:\Users\danie\Desktop\TornadoV\TornadoVSHV\Necessities\ScriptHookV_SDK_1.0.617.1a\inc;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\danie\Desktop\TornadoV\TornadoVSHV\Necessities\ScriptHookV_SDK_1.0.617.1a\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)inc;$(ProjectDir)ThirdParty;$(ProjectDir)ThirdParty\SoLoud\include;$(ProjectDir)..\..\..\Necessities\ScriptHookV_SDK_1.0.617.1a\inc;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\..\..\Necessities\ScriptHookV_SDK_1.0.617.1a\lib;$(LibraryPath)</LibraryPath>
     <TargetExt>.asi</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir)inc;C:\Users\danie\Desktop\TornadoV\TornadoVSHV\Necessities\ScriptHookV_SDK_1.0.617.1a\inc;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\danie\Desktop\TornadoV\TornadoVSHV\Necessities\ScriptHookV_SDK_1.0.617.1a\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)inc;$(ProjectDir)ThirdParty;$(ProjectDir)ThirdParty\SoLoud\include;$(ProjectDir)..\..\..\Necessities\ScriptHookV_SDK_1.0.617.1a\inc;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\..\..\Necessities\ScriptHookV_SDK_1.0.617.1a\lib;$(LibraryPath)</LibraryPath>
     <TargetExt>.asi</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -58,7 +58,7 @@
       <WarningLevel>Level4</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <DisableSpecificWarnings>4505;4127;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>_DEBUG;TORNADOV_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;TORNADOV_EXPORTS;_WINDOWS;_USRDLL;WITH_WINMM;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -67,7 +67,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>ScriptHookV.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ScriptHookV.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -77,7 +77,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <DisableSpecificWarnings>4505;4127;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>NDEBUG;TORNADOV_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TORNADOV_EXPORTS;_WINDOWS;_USRDLL;WITH_WINMM;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -86,7 +86,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>ScriptHookV.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ScriptHookV.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -101,7 +101,48 @@
     <ClInclude Include="inc\TornadoMenu.h" />
     <ClInclude Include="inc\TornadoParticle.h" />
     <ClInclude Include="inc\TornadoVortex.h" />
+    <ClInclude Include="inc\XmlHelper.h" />
+    <ClInclude Include="inc\AudioManager.h" />
     <ClInclude Include="inc\resource.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_audiosource.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_bassboostfilter.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_biquadresonantfilter.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_bus.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_c.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_dcremovalfilter.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_echofilter.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_error.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_fader.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_fft.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_fftfilter.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_file.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_file_hack_off.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_file_hack_on.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_filter.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_flangerfilter.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_freeverbfilter.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_internal.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_lofifilter.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_misc.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_monotone.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_noise.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_openmpt.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_queue.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_robotizefilter.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_sfxr.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_speech.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_tedsid.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_thread.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_vic.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_vizsn.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_wav.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_waveshaperfilter.h" />
+    <ClInclude Include="ThirdParty\SoLoud\include\soloud_wavstream.h" />
+    <ClInclude Include="ThirdParty\SoLoud\src\wav\dr_flac.h" />
+    <ClInclude Include="ThirdParty\SoLoud\src\wav\dr_mp3.h" />
+    <ClInclude Include="ThirdParty\SoLoud\src\wav\dr_wav.h" />
+    <ClInclude Include="ThirdParty\SoLoud\src\wav\stb_vorbis.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TornadoV.rc" />
@@ -113,14 +154,48 @@
     <ClCompile Include="src\physics\TornadoParticle.cpp" />
     <ClCompile Include="src\physics\TornadoVortex.cpp" />
     <ClCompile Include="src\ui\TornadoMenu.cpp" />
+    <ClCompile Include="src\utils\AudioManager.cpp" />
     <ClCompile Include="src\utils\IniHelper.cpp" />
     <ClCompile Include="src\utils\keyboard.cpp" />
     <ClCompile Include="src\utils\Logger.cpp" />
     <ClCompile Include="src\utils\LoopedParticle.cpp" />
     <ClCompile Include="src\utils\MathEx.cpp" />
+    <ClCompile Include="src\utils\XmlHelper.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\backend\winmm\soloud_winmm.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_audiosource.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_bus.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_core_3d.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_core_basicops.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_core_faderops.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_core_filterops.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_core_getters.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_core_setters.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_core_voicegroup.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_core_voiceops.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_fader.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_fft.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_fft_lut.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_file.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_filter.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_misc.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_queue.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\core\soloud_thread.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\wav\dr_impl.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\wav\soloud_wav.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\wav\soloud_wavstream.cpp" />
+    <ClCompile Include="ThirdParty\SoLoud\src\wav\stb_vorbis.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\TornadoV.ini" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="Resources\menu_config.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="Resources\Sounds\eas_alert.wav" />
+    <Media Include="Resources\Sounds\rumble-bass-2.wav" />
+    <Media Include="Resources\Sounds\tornado-weather-alert.wav" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

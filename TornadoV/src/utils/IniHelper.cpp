@@ -16,9 +16,8 @@ void IniHelper::Initialize(HMODULE hModule) {
     GetModuleFileNameA(hModule, path, MAX_PATH);
     fs::path dllPath(path);
     
-    // Set the INI path to be in the same directory as the ASI, with the same name
-    fs::path iniPath = dllPath.parent_path() / dllPath.stem();
-    iniPath.replace_extension(".ini");
+    // Path: TornadoVStuff\TornadoV.ini
+    fs::path iniPath = dllPath.parent_path() / "TornadoVStuff" / "TornadoV.ini";
     
     IniPath = iniPath.string();
     
@@ -35,11 +34,14 @@ void IniHelper::DeployDefaultConfig(HMODULE hModule) {
             DWORD size = SizeofResource(hModule, hRes);
             void* ptr = LockResource(hData);
             
+            // Ensure directory exists
+            fs::path p(IniPath);
+            fs::create_directories(p.parent_path());
+
             std::ofstream outFile(IniPath, std::ios::binary);
             if (outFile.is_open()) {
                 outFile.write((const char*)ptr, size);
                 outFile.close();
-                ShowNotification("~g~Tornado V: Default configuration deployed!");
                 return;
             }
         }

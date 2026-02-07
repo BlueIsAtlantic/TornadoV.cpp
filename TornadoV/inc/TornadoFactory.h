@@ -12,6 +12,7 @@ public:
     TornadoVortex* CreateVortex(Vector3 position);
     void OnUpdate(int gameTime);
     void RemoveAll();
+    void RefreshAllVortexSettings();
     void Dispose();
 
     int GetActiveVortexCount() const { return (int)m_activeVortexList.size(); }
@@ -30,7 +31,11 @@ private:
     int m_lastSpawnCompleteTime;
     
     bool m_spawnInProgress;
+    bool m_isScheduledSpawn;
     bool m_delaySpawn;
+
+    unsigned int m_easHandle;
+    unsigned int m_sirenHandle;
 };
 
 extern std::unique_ptr<TornadoFactory> g_Factory;

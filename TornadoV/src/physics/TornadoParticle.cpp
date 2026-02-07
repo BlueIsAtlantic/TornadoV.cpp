@@ -15,7 +15,7 @@ TornadoParticle::TornadoParticle(TornadoVortex* vortex, Vector3 position, Vector
 {
     Ref = SafeSetup(position);
     LayerIndex = layerIdx;
-    float layerSep = IniHelper::GetValue("VortexAdvanced", "LayerSeperationAmount", 22.0f);
+    float layerSep = IniHelper::GetValue("VortexAdvanced", "LayerSeparationAmount", 22.0f);
     _offset.x = 0;
     _offset.y = 0;
     _offset.z = layerSep * layerIdx;
@@ -80,8 +80,8 @@ void TornadoParticle::PostSetup() {
 }
 
 void TornadoParticle::RefreshCache() {
-    _cachedRotationSpeed = IniHelper::GetValue("Vortex", "RotationSpeed", 2.4f);
-    _cachedLayerSeparation = IniHelper::GetValue("VortexAdvanced", "LayerSeperationAmount", 22.0f);
+    _cachedRotationSpeed = TornadoMenu::m_rotationSpeed;
+    _cachedLayerSeparation = TornadoMenu::m_layerSeparation;
     _lastCacheTime = GAMEPLAY::GET_GAME_TIMER();
 }
 

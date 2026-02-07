@@ -23,6 +23,7 @@ public:
     
     static Vector3 MoveTowards(Vector3 current, Vector3 target, float maxDistanceDelta);
     static Vector3 AnglesToForward(Vector3 position, Vector3 angles, float length);
+    static Vector3 RotationToDirection(Vector3 rotation);
     static Quaternion Euler(float x, float y, float z);
     static Vector3 MultiplyVector(Vector3 vec, Quaternion quat);
 

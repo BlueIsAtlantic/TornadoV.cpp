@@ -1,3 +1,7 @@
 #include "inc/resource.h"
 
 IDR_INI_DEFAULT RCDATA "Resources\\TornadoV.ini"
+IDR_XML_DEFAULT RCDATA "Resources\\menu_config.xml"
+IDR_WAV_RUMBLE  RCDATA "Resources\\Sounds\\rumble-bass-2.wav"
+IDR_WAV_EAS     RCDATA "Resources\\Sounds\\eas_alert.wav"
+IDR_WAV_SIREN   RCDATA "Resources\\Sounds\\tornado-weather-alert.wav"

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MenuConfig>
+    <!-- Frame Styling -->
+    <Frame>
+        <TitleBox r="184" g="162" b="57" a="255" />
+        <SubtitleBox r="0" g="0" b="0" a="255" />
+        <Background r="0" g="0" b="0" a="200" />
+        <SelectionBar r="255" g="255" b="255" a="255" />
+    </Frame>
+    
+    <!-- Text Styling -->
+    <TextColors>
+        <TitleText r="255" g="255" b="255" a="255" />
+        <SubtitleText r="184" g="162" b="57" a="255" />
+        <CountText r="184" g="162" b="57" a="255" />
+        <OptionNormal r="255" g="255" b="255" a="255" />
+        <OptionSelected r="0" g="0" b="0" a="255" />
+    </TextColors>
+    
+    <!-- Layout Settings -->
+    <Layout>
+        <X>0.15</X>
+        <Y>0.10</Y>
+    </Layout>
+
+    <!-- General Settings -->
+    <General>
+        <IntStep value="5" />
+        <FloatStep value="0.1" />
+    </General>
+</MenuConfig>

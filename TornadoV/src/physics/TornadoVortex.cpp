@@ -5,13 +5,14 @@
 #include "Logger.h"
 #include "natives.h"
 #include "MathEx.h"
+#include "AudioManager.h"
 #include <algorithm>
 #include <cmath>
 #include <random>
 
 TornadoVortex::TornadoVortex(Vector3 initialPosition, bool neverDespawn)
     : _position(initialPosition), _destination({ 0.0f, 0, 0.0f, 0, 0.0f, 0 }), _despawnRequested(false), 
-      m_blip(0), _updateFrameCounter(0) {
+      m_blip(0), _updateFrameCounter(0), m_soundHandle(0) {
     
     Position = initialPosition;
     _createdTime = GAMEPLAY::GET_GAME_TIMER();
@@ -22,6 +23,11 @@ TornadoVortex::TornadoVortex(Vector3 initialPosition, bool neverDespawn)
     _lifeSpan = neverDespawn ? -1 : dis(gen); 
     
     RefreshCachedVars();
+
+    // Start 3D roar
+    if (TornadoMenu::m_enableTornadoSound) {
+        m_soundHandle = AudioManager::Get().Play3D("tornado_loop", _position.x, _position.y, _position.z, TornadoMenu::m_tornadoVolume, true);
+    }
 }
 
 TornadoVortex::~TornadoVortex() {
@@ -29,9 +35,9 @@ TornadoVortex::~TornadoVortex() {
 }
 
 void TornadoVortex::RefreshCachedVars() {
-    _cachedVerticalForce = IniHelper::GetValue("Vortex", "VerticalForceScale", 2.29f);
-    _cachedHorizontalForce = IniHelper::GetValue("Vortex", "HorizontalForceScale", 1.7f);
-    _cachedTopSpeed = IniHelper::GetValue("Vortex", "MaxEntitySpeed", 40.0f);
+    _cachedVerticalForce = TornadoMenu::m_vortexVerticalForceScale;
+    _cachedHorizontalForce = TornadoMenu::m_vortexHorizontalForceScale;
+    _cachedTopSpeed = TornadoMenu::m_vortexMaxEntitySpeed;
     
     // Use the values from TornadoMenu which are synchronized with the menu UI
     MaxEntityDist = TornadoMenu::m_maxEntityDistance;
@@ -98,15 +104,17 @@ void TornadoVortex::Build() {
     Logger::Log("Vortex: Layers=" + std::to_string(maxLayers) + ", ParticlesPerLayer=" + std::to_string(particleCount));
 
     // OPTIMIZATION: Reduce particle count significantly for better performance
-    maxLayers = (std::min)(maxLayers, 36); // Cap at 36 layers
-    particleCount = (std::min)(particleCount, 6); // Cap at 6 particles per layer
+    // User reported "Tornado spawned" but no tornado - let's ensure we build enough layers
+    maxLayers = (std::min)(maxLayers, 64); // Increased cap for visibility
+    particleCount = (std::min)(particleCount, 12); // Increased cap for density
     if (particleCount < 1) particleCount = 1; // Prevent division by zero
 
     int multiplier = 360 / particleCount;
     float particleSize = 3.0685f;
-    int layers = enableClouds ? 8 : maxLayers; // Reduced from 12
+    int layers = enableClouds ? 8 : maxLayers;
 
-    float layerSepScale = IniHelper::GetValue("VortexAdvanced", "LayerSeperationAmount", 22.0f);
+    float layerSepScale = IniHelper::GetValue("VortexAdvanced", "LayerSeparationAmount", 22.0f);
+    if (layerSepScale < 1.0f) layerSepScale = 22.0f; // Safety default if INI is broken
 
     Logger::Log("Vortex: Requesting assets...");
     
@@ -115,21 +123,18 @@ void TornadoVortex::Build() {
     if (!isCore) {
         Logger::Log("Vortex: Requesting PTFX asset: " + particleAsset);
         STREAMING::REQUEST_NAMED_PTFX_ASSET(const_cast<char*>(particleAsset.c_str()));
-        WAIT(0);
     }
     
     Logger::Log("Vortex: Requesting secondary PTFX asset: scr_agencyheistb");
     STREAMING::REQUEST_NAMED_PTFX_ASSET(const_cast<char*>("scr_agencyheistb"));
-    WAIT(0);
     
     Hash model = GAMEPLAY::GET_HASH_KEY(const_cast<char*>("prop_beach_volball02"));
     Logger::Log("Vortex: Requesting model: prop_beach_volball02");
     STREAMING::REQUEST_MODEL(model);
-    WAIT(0);
 
     int timeout = 0;
-    Logger::Log("Vortex: Waiting for assets to load (max 2s)...");
-    while (timeout < 120) { // 2 seconds at 60fps
+    Logger::Log("Vortex: Waiting for assets to load (max 5s)...");
+    while (timeout < 300) { // 5 seconds
         bool ptfx1Loaded = isCore || STREAMING::HAS_NAMED_PTFX_ASSET_LOADED(const_cast<char*>(particleAsset.c_str()));
         bool ptfx2Loaded = STREAMING::HAS_NAMED_PTFX_ASSET_LOADED(const_cast<char*>("scr_agencyheistb"));
         bool modelLoaded = STREAMING::HAS_MODEL_LOADED(model);
@@ -143,8 +148,8 @@ void TornadoVortex::Build() {
         timeout++;
     }
     
-    if (timeout >= 120) {
-        Logger::Log("Vortex: Some assets not loaded after 2s, proceeding anyway to avoid freeze.");
+    if (timeout >= 300) {
+        Logger::Log("Vortex: Some assets not loaded after 5s, proceeding anyway.");
     }
 
     Logger::Log("Vortex: Assets loaded. Building " + std::to_string(layers) + " layers...");
@@ -157,7 +162,7 @@ void TornadoVortex::Build() {
             pos.z += layerSepScale * layerIdx;
             Vector3 rot = { (float)(angle * multiplier), 0, 0.0f, 0, 0.0f, 0 }; // Initialize padding
 
-            if (layerIdx < 2 && angle % 2 == 0) {
+            if (TornadoMenu::m_particleMod && layerIdx < 2 && angle % 2 == 0) {
                 auto extraParticle = std::make_unique<TornadoParticle>(this, pos, rot, "scr_agencyheistb", "scr_env_agency3b_smoke", radius, layerIdx);
                 extraParticle->StartFx(4.7f);
                 
@@ -190,7 +195,7 @@ void TornadoVortex::Build() {
             _particles.push_back(std::move(mainParticle));
 
             // Yield more frequently during build to prevent watchdog trigger
-            if (_particles.size() % 5 == 0) {
+            if (_particles.size() % 10 == 0) {
                 WAIT(0);
             }
         }
@@ -219,9 +224,6 @@ void TornadoVortex::CollectNearbyEntities(int gameTime, float maxDistanceDelta) 
     // Increase limit significantly to ensure we don't "skip" entities in large radii
     // Processing 1024 entities' distance is fast enough for modern CPUs
     const int MAX_ADD_PER_TICK = 300; 
-    
-    // Internal vortex radius for priority collection
-    float coreRadius = IniHelper::GetValue("Vortex", "VortexRadius", 9.4f);
 
     // Helper to process entities from a pool
     auto processPool = [&](int count) {
@@ -242,9 +244,6 @@ void TornadoVortex::CollectNearbyEntities(int gameTime, float maxDistanceDelta) 
             
             // Don't pull entities that are too high up already
             if (ENTITY::GET_ENTITY_HEIGHT_ABOVE_GROUND(ent) > 300.0f) continue;
-
-            // Priority: if it's very close to the core, always try to add it
-            bool isPriority = (dist2d < coreRadius * 2.0f);
 
             if (ENTITY::IS_ENTITY_A_PED(ent)) {
                 if (!PED::IS_PED_RAGDOLL(ent)) {
@@ -382,6 +381,12 @@ void TornadoVortex::UpdatePulledEntities(int gameTime, float maxDistanceDelta) {
         // SHV APPLY_FORCE_TO_ENTITY_CENTER_OF_MASS: matches Helpers.cs extension (p7=0, p8=1)
         ENTITY::APPLY_FORCE_TO_ENTITY_CENTER_OF_MASS(entity, 1, normCross.x * force * horizontalForce, normCross.y * force * horizontalForce, normCross.z * force * horizontalForce, 0, 0, 1, 1);
 
+        // Rumble/Shake for Player
+        if (value.isPlayer && TornadoMenu::m_enableTornadoSound) {
+            CAM::SHAKE_GAMEPLAY_CAM(const_cast<char*>("LARGE_EXPLOSION_SHAKE"), 0.012f * (std::max)(1.0f, 30.0f / (std::max)(dist, 1.0f)));
+            CONTROLS::_SET_CONTROL_NORMAL(0, 214, 0.1f); // Set Rumble
+        }
+
         if (ENTITY::IS_ENTITY_A_PED(entity)) {
             if (!PED::IS_PED_RAGDOLL(entity)) {
                 PED::SET_PED_TO_RAGDOLL(entity, 800, 1500, 2, 1, 1, 0);
@@ -416,20 +421,40 @@ void TornadoVortex::OnUpdate(int gameTime) {
     Position = _position;
     DespawnRequested = _despawnRequested;
 
+    // Update sound position
+    if (m_soundHandle != 0) {
+        if (TornadoMenu::m_enableTornadoSound) {
+            AudioManager::Get().Update3DSound(m_soundHandle, _position.x, _position.y, _position.z);
+            AudioManager::Get().SetVolume(m_soundHandle, TornadoMenu::m_tornadoVolume);
+        } else {
+            AudioManager::Get().Stop(m_soundHandle);
+            m_soundHandle = 0;
+        }
+    } else if (TornadoMenu::m_enableTornadoSound) {
+        m_soundHandle = AudioManager::Get().Play3D("tornado_loop", _position.x, _position.y, _position.z, TornadoMenu::m_tornadoVolume, true);
+    }
+
     CollectNearbyEntities(gameTime, MaxEntityDist);
     UpdatePulledEntities(gameTime, MaxEntityDist);
 
     // Update blip
-    if (m_blip == 0) {
-        m_blip = UI::ADD_BLIP_FOR_COORD(_position.x, _position.y, _position.z);
-        UI::SET_BLIP_SPRITE(m_blip, 458);
-        UI::SET_BLIP_COLOUR(m_blip, 5);
-        UI::SET_BLIP_SCALE(m_blip, 1.0f);
-        UI::BEGIN_TEXT_COMMAND_SET_BLIP_NAME((char*)"STRING");
-        UI::_ADD_TEXT_COMPONENT_STRING((char*)"Tornado");
-        UI::END_TEXT_COMMAND_SET_BLIP_NAME(m_blip);
+    if (TornadoMenu::m_drawBlip) {
+        if (m_blip == 0) {
+            m_blip = UI::ADD_BLIP_FOR_COORD(_position.x, _position.y, _position.z);
+            UI::SET_BLIP_SPRITE(m_blip, 458);
+            UI::SET_BLIP_COLOUR(m_blip, 5);
+            UI::SET_BLIP_SCALE(m_blip, 1.0f);
+            UI::BEGIN_TEXT_COMMAND_SET_BLIP_NAME((char*)"STRING");
+            UI::_ADD_TEXT_COMPONENT_STRING((char*)"Tornado");
+            UI::END_TEXT_COMMAND_SET_BLIP_NAME(m_blip);
+        } else {
+            UI::SET_BLIP_COORDS(m_blip, _position.x, _position.y, _position.z);
+        }
     } else {
-        UI::SET_BLIP_COORDS(m_blip, _position.x, _position.y, _position.z);
+        if (m_blip != 0) {
+            UI::REMOVE_BLIP(&m_blip);
+            m_blip = 0;
+        }
     }
 
     // MATCH C# behavior: Update particles every frame (no skipping)
@@ -450,6 +475,11 @@ void TornadoVortex::ReleaseEntity(int handle) {
 }
 
 void TornadoVortex::Dispose() {
+    if (m_soundHandle != 0) {
+        AudioManager::Get().Stop(m_soundHandle);
+        m_soundHandle = 0;
+    }
+
     if (m_blip != 0) {
         UI::REMOVE_BLIP(&m_blip);
         m_blip = 0;

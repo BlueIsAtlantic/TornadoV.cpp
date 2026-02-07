@@ -4,13 +4,15 @@
 #include "MathEx.h"
 #include "IniHelper.h"
 #include "Logger.h"
+#include "AudioManager.h"
 #include <algorithm>
 #include <cmath>
 
 TornadoFactory::TornadoFactory()
     : m_spawnDelayAdditive(0), m_spawnDelayStartTime(0),
       m_lastSpawnAttempt(0), m_lastSpawnCompleteTime(0),
-      m_spawnInProgress(false), m_delaySpawn(false) {
+      m_spawnInProgress(false), m_isScheduledSpawn(false), m_delaySpawn(false),
+      m_easHandle(0), m_sirenHandle(0) {
 }
 
 TornadoFactory::~TornadoFactory() {
@@ -79,8 +81,17 @@ TornadoVortex* TornadoFactory::CreateVortex(Vector3 position) {
     TornadoVortex* ptr = tVortex.get();
     m_activeVortexList.push_back(std::move(tVortex));
 
-    // Notification
-    if (TornadoMenu::m_notifications) {
+    // Play Global Sounds (2D) if not already playing
+    if (TornadoMenu::m_enableSirens || (TornadoMenu::m_enableEAS && m_easHandle == 0)) {
+        if (TornadoMenu::m_enableEAS && m_easHandle == 0) {
+            m_easHandle = AudioManager::Get().Play2D("eas_beeps", TornadoMenu::m_easVolume, false);
+        }
+        if (TornadoMenu::m_enableSirens && m_sirenHandle == 0) {
+            m_sirenHandle = AudioManager::Get().Play2D("city_siren", TornadoMenu::m_sirenVolume, false);
+        }
+    }
+
+    if (ptr && TornadoMenu::m_notifications) {
         IniHelper::ShowNotification("~g~Tornado spawned nearby.");
     }
 
@@ -92,23 +103,41 @@ TornadoVortex* TornadoFactory::CreateVortex(Vector3 position) {
 
 void TornadoFactory::OnUpdate(int gameTime) {
     if (m_activeVortexList.empty()) {
-        if (TornadoMenu::m_spawnInStorm) {
-                bool isStorming = GAMEPLAY::GET_RAIN_LEVEL() > 0.1f;
+        // Stop global sounds if they are playing
+        if (m_easHandle != 0) {
+            AudioManager::Get().Stop(m_easHandle);
+            m_easHandle = 0;
+        }
+        if (m_sirenHandle != 0) {
+            AudioManager::Get().Stop(m_sirenHandle);
+            m_sirenHandle = 0;
+        }
 
-                if (isStorming && !m_spawnInProgress && gameTime - m_lastSpawnAttempt > 1000) {
-                    if ((float)rand() / RAND_MAX < 0.05f) {
+        if (TornadoMenu::m_spawnInStorm) {
+                bool isStorming = GAMEPLAY::GET_RAIN_LEVEL() > 0.1f || 
+                                 GAMEPLAY::IS_PREV_WEATHER_TYPE(const_cast<char*>("CLEARING")) ||
+                                 GAMEPLAY::IS_PREV_WEATHER_TYPE(const_cast<char*>("THUNDER")) ||
+                                 GAMEPLAY::IS_PREV_WEATHER_TYPE(const_cast<char*>("RAIN")) ||
+                                 GAMEPLAY::IS_PREV_WEATHER_TYPE(const_cast<char*>("BLIZZARD")) ||
+                                 GAMEPLAY::IS_PREV_WEATHER_TYPE(const_cast<char*>("SNOWLIGHT")) ||
+                                 GAMEPLAY::IS_PREV_WEATHER_TYPE(const_cast<char*>("XMAS"));
+
+                if (isStorming && !m_spawnInProgress && !m_isScheduledSpawn && gameTime - m_lastSpawnAttempt > 1000) {
+                    // Increased probability from 0.15f to 0.30f for better "Spawn In Storm" responsiveness
+                    if ((float)rand() / RAND_MAX < 0.30f) {
                         m_spawnDelayStartTime = gameTime;
-                        m_spawnDelayAdditive = rand() % 40000;
+                        m_spawnDelayAdditive = rand() % 20000; // 0-20s delay
 
                         GAMEPLAY::SET_WIND_SPEED(70.0f);
-                        m_spawnInProgress = true;
+                        m_isScheduledSpawn = true;
+                        Logger::Log("Factory: Storm detected, scheduled random spawn in " + std::to_string(m_spawnDelayAdditive) + "ms");
                     }
                     m_lastSpawnAttempt = gameTime;
                 }
         }
     }
 
-    if (m_spawnInProgress && m_spawnDelayStartTime != 0) {
+    if (m_isScheduledSpawn && m_spawnDelayStartTime != 0) {
         if (gameTime - m_spawnDelayStartTime > m_spawnDelayAdditive) {
             Vector3 playerPos = ENTITY::GET_ENTITY_COORDS(PLAYER::PLAYER_PED_ID(), true);
             float angle = (float)rand() / RAND_MAX * 6.28318f;
@@ -116,6 +145,7 @@ void TornadoFactory::OnUpdate(int gameTime) {
             playerPos.x += std::cos(angle) * dist;
             playerPos.y += std::sin(angle) * dist;
 
+            m_isScheduledSpawn = false; // Reset before calling CreateVortex
             CreateVortex(playerPos);
             m_spawnDelayStartTime = 0;
             m_spawnDelayAdditive = 0;
@@ -131,10 +161,37 @@ void TornadoFactory::OnUpdate(int gameTime) {
             ++it;
         }
     }
+
+    // Update global sound volumes
+    if (m_easHandle != 0) {
+        if (TornadoMenu::m_enableEAS) {
+            AudioManager::Get().SetVolume(m_easHandle, TornadoMenu::m_easVolume);
+        } else {
+            AudioManager::Get().Stop(m_easHandle);
+            m_easHandle = 0;
+        }
+    }
+    if (m_sirenHandle != 0) {
+        if (TornadoMenu::m_enableSirens) {
+            AudioManager::Get().SetVolume(m_sirenHandle, TornadoMenu::m_sirenVolume);
+        } else {
+            AudioManager::Get().Stop(m_sirenHandle);
+            m_sirenHandle = 0;
+        }
+    }
 }
 
 void TornadoFactory::RemoveAll() {
     m_spawnInProgress = false;
+
+    if (m_easHandle != 0) {
+        AudioManager::Get().Stop(m_easHandle);
+        m_easHandle = 0;
+    }
+    if (m_sirenHandle != 0) {
+        AudioManager::Get().Stop(m_sirenHandle);
+        m_sirenHandle = 0;
+    }
 
     for (auto& vortex : m_activeVortexList) {
         vortex->Dispose();
@@ -144,6 +201,12 @@ void TornadoFactory::RemoveAll() {
     Ped playerPed = PLAYER::PLAYER_PED_ID();
     Vector3 playerPos = ENTITY::GET_ENTITY_COORDS(playerPed, true);
     GRAPHICS::REMOVE_PARTICLE_FX_IN_RANGE(playerPos.x, playerPos.y, playerPos.z, 1000.0f);
+}
+
+void TornadoFactory::RefreshAllVortexSettings() {
+    for (auto& vortex : m_activeVortexList) {
+        vortex->RefreshCachedVars();
+    }
 }
 
 void TornadoFactory::Dispose() {

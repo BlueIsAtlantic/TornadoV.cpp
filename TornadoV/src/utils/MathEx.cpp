@@ -45,6 +45,13 @@ Vector3 MathEx::AnglesToForward(Vector3 position, Vector3 angles, float length) 
     return result;
 }
 
+Vector3 MathEx::RotationToDirection(Vector3 rotation) {
+    float z = rotation.z * (float)DegToRad;
+    float x = rotation.x * (float)DegToRad;
+    float num = std::abs(cosf(x));
+    return { -sinf(z) * num, 0, cosf(z) * num, 0, sinf(x), 0 };
+}
+
 Quaternion MathEx::Euler(float x, float y, float z) {
     float halfPhi = 0.5f * x;   // Roll
     float halfTheta = 0.5f * y; // Pitch

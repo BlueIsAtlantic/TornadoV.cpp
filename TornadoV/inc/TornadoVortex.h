@@ -33,9 +33,9 @@ public:
 
     void ChangeDestination(bool trackToPlayer);
     Vector3 GetPosition() const { return Position; }
+    void RefreshCachedVars();
 
 private:
-    void RefreshCachedVars();
     void CollectNearbyEntities(int gameTime, float maxDistanceDelta);
     void UpdatePulledEntities(int gameTime, float maxDistanceDelta);
     void AddEntity(ActiveEntity entity);
@@ -74,4 +74,6 @@ private:
 
     // Helper for blip (not in C# but needed for SHV)
     Blip m_blip;
+
+    unsigned int m_soundHandle;
 };
