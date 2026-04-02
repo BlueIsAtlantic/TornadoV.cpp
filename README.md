@@ -5,7 +5,7 @@ A high-performance, native C++ rewrite of the TornadoV mod for Grand Theft Auto 
 ##  Key Features
 
 - **Native Performance**: Built from the ground up in C++ to minimize frame time impact and maximize execution efficiency.
-- **Seamless UI**: Built-in menu system for real-time configuration of vortex strength, movement, and visual styles.
+- **More configuration options and files validation**: More customization and safety
 - ...and all other features from TornadoV's C# version.
 
 ##  Technical Improvements (vs. C# Version)
@@ -32,7 +32,7 @@ A high-performance, native C++ rewrite of the TornadoV mod for Grand Theft Auto 
 - **SDK**: ScriptHookV SDK.
 - **Configuration**: Target `Release | x64` for the optimized ASI build.
 
-## ⚖️ Credits
+##  Credits
 
 - **Dependencies**: Alexander Blade (ScriptHookV)
 
